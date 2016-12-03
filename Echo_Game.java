@@ -7,21 +7,24 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.io.IOException;
-
+//Client side of the game
 public class Echo_Game {
 	public static void main(String args[]) throws IOException, InterruptedException {
+		//clear cmd line
 		new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
 		String host = "localhost";
 		int port = 1099;
 		int playerid = 0;
 		Scanner console = new Scanner(System.in);
 		try {
+			//Connect to the registry and make a Client object and a ServerServant object
 			Registry registry = LocateRegistry.getRegistry(host,port);
 			Client gameclient = (Client) registry.lookup("Client");
 			ServerServant gameserver = new ServerServant(gameclient);
 			System.out.println("Welcome to Echo!\n");
 			System.out.println("Enter your playername: ");
 			String consoleline;
+			//Register to the server with a playername and get given an id.
 			while(true){
 				consoleline = console.nextLine();
 				playerid = gameclient.register(consoleline);
@@ -41,8 +44,9 @@ public class Echo_Game {
 		}
 		System.out.println("Connected");
 	}
+	//mainscreen part of the client, view game list, view players, create and join lobbies
 	public static void mainscreen(int playerid, ServerServant gameserver, Client gameclient) throws IOException, InterruptedException {
-		System.out.println("Commands:\ngames : Lists all available rooms with number of players in the room\ncreate : Create a room\njoin <gameid> : Join the room of the specified id\nwho : List all players online\nquit : Quit the game\nhelp : List all commands");
+		System.out.println("Commands:\n/games : Lists all available rooms with number of players in the room\n/create : Create a room\n/join <gameid> : Join the room of the specified id\n/who : List all players online\n/quit : Quit the game\n/help : List all commands");
 		Scanner console = new Scanner(System.in);
 		int gameid = 0;
 			while (true){
@@ -100,25 +104,17 @@ public class Echo_Game {
 					System.out.println("Something went wrong when removing you");
 				}
 				else if(consolesplit[0].equalsIgnoreCase("/help") || consolesplit[0].equalsIgnoreCase("/h")){
-					System.out.println("Commands:\ngames : Lists all available rooms with number of players in the room\ncreate : Create a room\njoin <gameid> : Join the room of the specified id\nwho : List all players online\nquit : Quit the game\nhelp : List all commands");
+					System.out.println("Commands:\n/games : Lists all available rooms with number of players in the room\n/create : Create a room\n/join <gameid> : Join the room of the specified id\n/who : List all players online\n/quit : Quit the game\n/help : List all commands");
 				}
 				else if(consolesplit[0].equalsIgnoreCase("/debug")){
 					gameclient.debug(playerid);
-					//System.out.println("Debug :" + gameclient.debug(playerid));
 				}
 				else {
 					System.out.println("Unrecognized command, type /help for the command list");
 				}
-				/*if(callbackId!=0){
-						callbackId = aList.unregister(callbackId);
-						System.out.println("Unregistered");
-					}
-					else {
-						System.out.println("Not registered");
-					}*/
-				
 			}
 	}
+	//lobby part of the client, can view players in lobby, chat with players in lobby, leave lobby and start a game
 	public static void inLobby(int gameid, int playerid, ServerServant gameserver, Client gameclient) throws IOException, InterruptedException{
 		Scanner console = new Scanner(System.in);
 		while(true){
@@ -140,12 +136,16 @@ public class Echo_Game {
 			else if(consoleline.equalsIgnoreCase("/who")){
 				System.out.println(gameclient.listplayerslobby(gameid));
 			}
+			else if(consoleline.equalsIgnoreCase("/help")){
+				System.out.println("Commands:\n/who : List all players in lobby\n/leave : Leave the lobby and go back to main menu\n/quit : Quit the game\n/help : List all commands");
+			}
 			else {
 				System.out.println("\n");
 				gameclient.lobbychat(gameid, playerid, gameserver, " says: " + consoleline);
 			}
 		}
 	}
+	//ingame part of the client, can pass moves to the server, not implemented fully
 	public static void inGame(int gameid, int playerid, ServerServant gameserver, Client gameclient) throws IOException, InterruptedException{
 		new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
 		System.out.println("Game started!\nEnter move:");

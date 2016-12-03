@@ -5,6 +5,7 @@ import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 
+//The servant for the Server interface
 public class ServerServant extends UnicastRemoteObject implements Server {
 	private boolean[] games = new boolean[10];
 	private int[] turntimers = new int[10];
@@ -12,9 +13,11 @@ public class ServerServant extends UnicastRemoteObject implements Server {
 	Timer timer = new Timer();
 	boolean time = false;
 	private int timeduration = 0;
+	//constructor for ServerServant
 	public ServerServant(Client gameclient) throws RemoteException{
 
 	}
+	//start game for all clients connected to the lobby. 
 	public void gamestart(int turnnumber,int gameid,boolean[] gameinprogress) throws RemoteException {
 		System.out.println("Game started");
 		games = gameinprogress;
@@ -25,18 +28,23 @@ public class ServerServant extends UnicastRemoteObject implements Server {
 			timer.schedule(new turntimer(), 1000,1000);
 		}
 	}
+	//would signal the start of a turn, not implemented
 	public void turnstart(int turnnumber) throws RemoteException {
 		
 	}
+	//would signal the end of a turn, not implemented
 	public void endturn(int turnnumber) throws RemoteException {
 		
 	}
+	//Message sent to all players in lobby that a new player has joined
 	public void playerjoins(String playername) throws RemoteException {
 		System.out.println(playername + " has joined the labby.\n");
 	}
+	//Sends messages to all players in lobby except for the one that spoke
 	public void lobbychat(String playername, String message) throws RemoteException {
 		System.out.println(playername + message + "\n");
 	}
+	//Timer for turns, example uses 
 	class turntimer extends TimerTask{
 		public void run() {
 			timeduration++;

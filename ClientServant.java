@@ -4,13 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 
+//The servant for the Client interface
 public class ClientServant extends UnicastRemoteObject implements Client {
 	private List<Integer> gamelist = new ArrayList<Integer>();
+	//hasmap of all lobbies and the players inside them
 	HashMap<Integer,ArrayList<Pair>> playersingames = new HashMap<Integer, ArrayList<Pair>>();
 	private List<Pair> playerlist = new ArrayList<Pair>();
 	private int numofplayerstotal = 0;
 	private int numofgamestotal = 0;
 	private int currentgames = 0;
+	//hashmap of all lobbies and pointer to their client window for message passing
 	private HashMap<Integer,ArrayList<Server>> gserver = new HashMap<Integer,ArrayList<Server>>();
 	private int maxgames = 10;
 	private boolean[] games = new boolean[maxgames];
@@ -18,9 +21,11 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 	public ClientServant() throws RemoteException{
 		
 	}
+	//would send to move to the server, not implemented
 	public void sendMove(int gamenum, int turnnum, int playerid) throws RemoteException {
 		
 	}
+	//join a lobby and add the player's server object to the lobby, send message to all other players that player has joined the lobby
 	public String joingame(int gamenum, int playerid, Server gameserver) throws RemoteException {
 		if (gameinprogress[gamenum]==true) return "INPROGRESS";
 		if (games[gamenum]==false) return "NOGAME";
@@ -43,7 +48,7 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 		}
 		return sendback;
 	}
-	
+	//register a playerid and playername from system
 	public int register(String playername) throws RemoteException {
 		for(Pair p: playerlist){
 			if(playername.equals(p.name)) return -1;
@@ -54,7 +59,7 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 		playerlist.add(newplayer);
 		return numofplayerstotal;
 	}
-	
+	//remove a playerid and playername from system
 	public int unregister(int playerid) throws RemoteException {
 		int rIndex = -1;
 		for(Pair p:playerlist){
@@ -66,7 +71,7 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 		if(rIndex>=0) return 0;
 		return 1;
 	}
-	
+	//start the game, all players in the lobby's game begins
 	public int startgame(int gameid, int playerid) throws RemoteException {
 		gameinprogress[gameid]=true;
 		for (Server ser: gserver.get(gameid)){
@@ -74,7 +79,7 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 		}
 		return 0;
 	}
-	
+	//leave the lobby, cut all ties to the lobby, sends message to all other players that player has left
 	public int leavegame(int gameid,int playerid, Server gameserver) throws RemoteException {
 		ArrayList<Pair> plist = playersingames.get(gameid);
 		ArrayList<Server> slist = gserver.get(gameid);
@@ -109,7 +114,7 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 		if(rIndex>=0) return 0;
 		return 1;
 	}
-	
+	//create a lobby for players to join
 	public int creategame(int playerid, Server gameserver) throws RemoteException {
 		int gamecreated=0;
 		numofgamestotal++;
@@ -133,12 +138,10 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 				break;
 			}
 		}
-		
-		//playerlist.add(playername);
 		currentgames++;
 		return gamecreated;
 	}
-	
+	//Return a list of all players on the server
 	public String listplayers() {
 		String returnstring = "Players:\n";		
 		for(Pair p: playerlist){
@@ -146,7 +149,7 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 		}
 		return returnstring;
 	}
-	
+	//Return a list of all players in a lobby
 	public String listplayerslobby(int gameid) {
 		String returnstring = ("Players:\n in Game " + gameid + ":\n");
 		for(Pair p: playersingames.get(gameid)){
@@ -154,7 +157,7 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 		}
 		return returnstring;
 	}
-	
+	//Sends a message to all players in a lobby, aside from the player who sent the message
 	public void lobbychat(int gamenum, int playerid, Server myserver, String message) throws RemoteException{
 		String pname="";
 		for (Pair p: playerlist){
@@ -164,7 +167,7 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 			if(!ser.equals(myserver)) ser.lobbychat(pname, message);
 		}
 	}
-	
+	//Return a hastmap of all lobbies and the players inside them
 	public HashMap<Integer,List<String>> listgames() throws RemoteException {
 		HashMap<Integer,List<String>> listgame = new HashMap<Integer,List<String>>();
 		for (int x=0;x<maxgames;x++){
@@ -180,7 +183,7 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 		}
 		return listgame;
 	}
-	
+	//Function to debug things as I was working through the project
 	public void debug(int playerid) {
 		int ind = getPlayerIndex(playerid);
 		for(Pair p: playerlist){
@@ -196,7 +199,7 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 			}
 		}
 	}
-	
+	//Custom function to get the index of the playerid in the list of players
 	public int getPlayerIndex(int pid) {
 		for(int x=0;x<playerlist.size();x++){
 			if (playerlist.get(x).id == pid)	return x;
@@ -212,8 +215,9 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 		name = key;
 		id = value;
 	}
-	
+	//Return name of the pair
 	private String name()	{ return name; }
+	//Return id of the pair
 	private Integer id() 	{ return id; }
 
 }

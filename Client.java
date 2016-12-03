@@ -5,7 +5,9 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
 
+//The remote interface for the Client
 public interface Client extends Remote {
+	//All are described in ClientServant
 	void sendMove(int gamenum, int turnnum, int playerid) throws RemoteException;
 	String joingame(int gameid, int playerid, Server gameserver) throws RemoteException;
 	int register(String playername) throws RemoteException;

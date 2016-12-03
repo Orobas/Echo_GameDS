@@ -2,10 +2,11 @@ import java.rmi.*;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-
+//Server side of the game
 public class Echo_GameServer {
 	public static void main(String args[]) {
 		try{
+			//Open the registry
 			System.setProperty("java.rmi.server.hostname", "localhost");
 			ClientServant gameclient = new ClientServant();
 			Registry registry;
@@ -13,7 +14,6 @@ public class Echo_GameServer {
 				registry = LocateRegistry.getRegistry();
 				registry.list();
 			}catch (RemoteException e){
-				//System.out.println("RMI registry cannot be located at port " + Registry.REGISTRY_PORT);
 				registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
 				System.out.println("RMI registry created at port " + Registry.REGISTRY_PORT);
 			}
