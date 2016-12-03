@@ -11,24 +11,11 @@ public interface Client extends Remote {
 	int register(String playername) throws RemoteException;
 	int unregister(int playerid) throws RemoteException;
 	int startgame(int gamenum, int playerid) throws RemoteException;
-	int leavegame(int gameid, int playerid) throws RemoteException;
+	int leavegame(int gameid, int playerid, Server gameserver) throws RemoteException;
 	int creategame(int playerid, Server gameserver) throws RemoteException;
 	String listplayers() throws RemoteException;
+	String listplayerslobby(int gameid) throws RemoteException;
+	void lobbychat(int gamenum, int playerid, Server myserver, String message) throws RemoteException;
 	HashMap<Integer,List<String>> listgames() throws RemoteException;
 	void debug(int playerid) throws RemoteException;
 }
-/*
-import java.rmi.*;
-import java.util.Vector;
-import java.rmi.server.UnicastRemoteObject;
-
-public interface ShapeList extends Remote {
-	Shape newShape(GraphicalObject g) throws RemoteException;
-	Vector<Shape> allShapes() throws RemoteException;
-	int getVersion() throws RemoteException;
-	int register(WhiteboardCallback callback) throws RemoteException;
-	int unregister(int callbackId) throws RemoteException;
-	
-}
-*/
-

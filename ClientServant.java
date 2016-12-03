@@ -23,6 +23,7 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 	}
 	public String joingame(int gamenum, int playerid, Server gameserver) throws RemoteException {
 		if (gameinprogress[gamenum]==true) return "INPROGRESS";
+		if (games[gamenum]==false) return "NOGAME";
 		ArrayList<Pair> plist = playersingames.get(gamenum);
 		ArrayList<Server> serverlist = new ArrayList<Server>();
 		String curname = playerlist.get(getPlayerIndex(playerid)).name;
@@ -30,6 +31,9 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 		serverlist = gserver.get(gamenum);
 		serverlist.add(gameserver);
 		plist.add(newpair);
+		for(Server ser: gserver.get(gamenum)){
+			ser.playerjoins(curname);
+		}
 		gserver.put(gamenum,serverlist);
 		playersingames.put(gamenum,plist);
 		System.out.println(curname + " joined game " + gamenum);
@@ -39,13 +43,18 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 		}
 		return sendback;
 	}
+	
 	public int register(String playername) throws RemoteException {
+		for(Pair p: playerlist){
+			if(playername.equals(p.name)) return -1;
+		}
 		numofplayerstotal++;
 		Pair newplayer = new Pair(playername,numofplayerstotal);
-		System.out.println(newplayer.name() + " " + newplayer.id());
+		System.out.println(newplayer.name() + " " + newplayer.id() + " registered.");
 		playerlist.add(newplayer);
 		return numofplayerstotal;
 	}
+	
 	public int unregister(int playerid) throws RemoteException {
 		int rIndex = -1;
 		for(Pair p:playerlist){
@@ -57,24 +66,7 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 		if(rIndex>=0) return 0;
 		return 1;
 	}
-	public int leavegame(int gameid,int playerid) throws RemoteException {
-		ArrayList<Pair> plist = playersingames.get(gameid);
-		int rIndex = -1;
-		for(Pair p:plist){
-			if(playerid==p.id){
-				rIndex = plist.indexOf(p);
-			}
-		}
-		plist.remove(rIndex);
-		if(plist.size()==0){
-			playersingames.remove(gameid);
-		}
-		else{
-			playersingames.put(gameid,plist);
-		}
-		if(rIndex>=0) return 0;
-		return 1;
-	}
+	
 	public int startgame(int gameid, int playerid) throws RemoteException {
 		gameinprogress[gameid]=true;
 		for (Server ser: gserver.get(gameid)){
@@ -82,6 +74,42 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 		}
 		return 0;
 	}
+	
+	public int leavegame(int gameid,int playerid, Server gameserver) throws RemoteException {
+		ArrayList<Pair> plist = playersingames.get(gameid);
+		ArrayList<Server> slist = gserver.get(gameid);
+		String playername="";
+		int rIndex = -1;
+		for(Pair p:plist){
+			if(playerid==p.id){
+				playername = p.name;
+				rIndex = plist.indexOf(p);
+			}
+		}
+		plist.remove(rIndex);
+		for (Server ser: slist){
+			if(gameserver.equals(ser)){
+				rIndex = slist.indexOf(ser);
+			}
+		}
+		slist.remove(rIndex);
+		if(plist.size()==0){
+			playersingames.remove(gameid);
+		}
+		else{
+			playersingames.put(gameid,plist);
+		}
+		if(slist.size()==0){
+			gserver.remove(gameid);
+		}
+		else{
+			gserver.put(gameid,slist);
+		}
+		lobbychat(gameid, playerid, gameserver, " has left the lobby.");
+		if(rIndex>=0) return 0;
+		return 1;
+	}
+	
 	public int creategame(int playerid, Server gameserver) throws RemoteException {
 		int gamecreated=0;
 		numofgamestotal++;
@@ -97,7 +125,11 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 				playersingames.put(x,newplayerlist);
 				gamecreated=x;
 				gserver.put(x,serverlist);
-				System.out.println("Game created: " + x);
+				String playername="";
+				for(Pair p:playerlist){
+					if(playerid==p.id) playername=p.name;
+				}
+				System.out.println("Game created: " + x + " by " + playername);
 				break;
 			}
 		}
@@ -106,6 +138,33 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 		currentgames++;
 		return gamecreated;
 	}
+	
+	public String listplayers() {
+		String returnstring = "Players:\n";		
+		for(Pair p: playerlist){
+			returnstring = (returnstring+"Id: " + p.id + " Name: " + p.name + "\n");
+		}
+		return returnstring;
+	}
+	
+	public String listplayerslobby(int gameid) {
+		String returnstring = ("Players:\n in Game " + gameid + ":\n");
+		for(Pair p: playersingames.get(gameid)){
+			returnstring = (returnstring + "Id: " + p.id + " Name: " + p.name + "\n"); 
+		}
+		return returnstring;
+	}
+	
+	public void lobbychat(int gamenum, int playerid, Server myserver, String message) throws RemoteException{
+		String pname="";
+		for (Pair p: playerlist){
+			if (playerid==p.id) pname = p.name;
+		}
+		for (Server ser: gserver.get(gamenum)){
+			if(!ser.equals(myserver)) ser.lobbychat(pname, message);
+		}
+	}
+	
 	public HashMap<Integer,List<String>> listgames() throws RemoteException {
 		HashMap<Integer,List<String>> listgame = new HashMap<Integer,List<String>>();
 		for (int x=0;x<maxgames;x++){
@@ -116,22 +175,12 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 					System.out.println(p.name);
 					plist.add(p.name());
 				}
-				for(String name: plist){
-					System.out.println("X: " + x + " Name: " + name);
-				}
 				listgame.put(x,plist);
 			}
 		}
-		System.out.println("MADE");
 		return listgame;
 	}
-	public String listplayers() {
-		String returnstring = "Players:\n";		
-		for(Pair p: playerlist){
-			returnstring = (returnstring+"Id: " + p.id + " Name: " + p.name + "\n");
-		}
-		return returnstring;
-	}
+	
 	public void debug(int playerid) {
 		int ind = getPlayerIndex(playerid);
 		for(Pair p: playerlist){
@@ -147,12 +196,15 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 			}
 		}
 	}
+	
 	public int getPlayerIndex(int pid) {
 		for(int x=0;x<playerlist.size();x++){
 			if (playerlist.get(x).id == pid)	return x;
 		}
 		return 0;
-	} 
+	}
+	
+	//Custom class to hold pair of values
 	private class Pair{
 	private final String name;
 	private final Integer id;
@@ -167,57 +219,3 @@ public class ClientServant extends UnicastRemoteObject implements Client {
 }
 }
 
-
-/*
-import java.rmi.*;
-import java.rmi.server.UnicastRemoteObject;
-import java.util.Vector;
-import java.util.HashMap;
-import java.util.Map;
-
-public class ShapeListServant extends UnicastRemoteObject implements ShapeList {
-	private static final long serialVersionUID = 1L;
-	private Vector<Shape> theList;
-	private int version;
-	private Map<Integer, WhiteboardCallback> subbed = new HashMap<Integer, WhiteboardCallback>();
-	private int subnum=0;
-
-	public ShapeListServant() throws RemoteException{
-		theList = new Vector<Shape>();
-		version = 0;
-	}
-
-	public Shape newShape(GraphicalObject g) throws RemoteException{
-		version++;
-		Shape s = new ShapeServant(g, version);
-		theList.addElement(s);
-		for (int key: subbed.keySet()) {
-			//System.out.println("iterating...");
-			//System.out.println("key: "+subbed.get(key));
-			subbed.get(key).callback(version);
-		}
-		return s;
-	}
-
-	public Vector<Shape> allShapes() throws RemoteException{
-		return theList;
-	}
-
-	public int getVersion() throws RemoteException{
-		return version;
-	}
-	
-	public int register(WhiteboardCallback whiteboard) throws RemoteException{
-		subnum++;
-		subbed.put(subnum, whiteboard);
-		System.out.println(subbed);
-		return subnum;
-		
-	}
-	
-	public int unregister(int callbackId) throws RemoteException{
-		subbed.remove(callbackId);
-		return 0;
-	}
-}
-*/

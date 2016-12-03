@@ -1,0 +1,55 @@
+Assumptions:
+Players wont leave lobbies when games are in progress
+Players will not lose connections
+
+Script
+
+SETUP:
+Open 5 command windows
+title Server on 1
+title Player1 on 2
+title Player2 on 3
+title Player3 on 4
+title Player4 on 5
+
+START AND REGISTRATION:
+Server: java Echo_GameServer
+Player1: java Echo_Game
+Player1: player1
+Player2: java Echo_Game
+Player2: player2
+Player3: java Echo_Game
+Player3: player3
+Player4: java Echo_Game
+Player4: player3 (Should return player name already exists)
+Player4: player4
+(Server should show players when they register)
+
+/WHO, /QUIT AND REJOINING:
+Player4: /who (Should return list of all players)
+Player2: /quit (Should stop Player2 program)
+Player1: /who (Should return list of all players minus 2);
+Player2: java Echo_Game
+Player2: player2 (Should show name was released for reuse, but has a new id)
+Player2: /who (Should show all players, with player2 on the end with a new playerid)
+
+/CREATE, /JOIN, /GAMES AND CHAT:
+Player1: /create (Should create a game and show up on the Server)
+Player2: /create (Should create a game and show up on the Server)
+Player3: /games (Should show game 0 and game 1 with player1 in game 0 and player2 in game 1)
+Player3: /join 0 (Should join the game, say who's in the lobby, message should appear on Player1 saying player3 joined)
+Player4: /games (Should show game 0 with player1 and player3, and should show game 1 with player2)
+Player3: /leave (Should leave the game and return to menu, player1 should see that player1 left)
+Player4: /join 1 (Should join the game, say who's in the lobby, message should appear on Player2 saying player4 joined)
+Player3: /games(Should show game 0 with player1, and should show game 1 with player2 and player4)
+Player2: hello (Message should be sent to Player4 only)
+Player4: hello back (Message should be sent to Player2 only)
+Player1: hello (Message shouldn't be sent to anyone, no one in lobby)
+
+/START, /JOIN DURING GAMES AND TURN COUNTING:
+Player2: /start (Should start the game on both Player2 and Player4)
+Wait a few turns to show that server is working
+Player3: /join 1 (Should say game is already in progress)
+Player1: /start (Should start a game with separate timer from game 1)
+Wait a few turns to show that the two turns are tracking separately and on different timers
+

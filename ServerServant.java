@@ -31,6 +31,12 @@ public class ServerServant extends UnicastRemoteObject implements Server {
 	public void endturn(int turnnumber) throws RemoteException {
 		
 	}
+	public void playerjoins(String playername) throws RemoteException {
+		System.out.println(playername + " has joined the labby.\n");
+	}
+	public void lobbychat(String playername, String message) throws RemoteException {
+		System.out.println(playername + message + "\n");
+	}
 	class turntimer extends TimerTask{
 		public void run() {
 			timeduration++;
@@ -46,18 +52,3 @@ public class ServerServant extends UnicastRemoteObject implements Server {
 	}
 	
 }
-
-/*
-import java.rmi.*;
-import java.rmi.server.UnicastRemoteObject;
-import java.util.Vector;
-
-public class WhiteboardCallbackServant extends UnicastRemoteObject implements WhiteboardCallback {
-	public WhiteboardCallbackServant(ShapeList aList) throws RemoteException{
-		
-	}
-	public void callback(int version) throws RemoteException{
-		System.out.print("Version updated, new version: " + version + "\n");
-	}
-}
-*/
